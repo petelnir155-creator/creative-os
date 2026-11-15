@@ -19,7 +19,7 @@ export default function AuthGate() {
   return (
     <div className="grid min-h-dvh place-items-center p-6">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-extrabold">סטודיו יצירתי</h1>
+        <h1 className="text-xl font-extrabold">רובוט עדי</h1>
         {state === 'sent' ? (
           <p className="text-sm leading-relaxed text-slate-600">
             שלחתי קישור כניסה ל־<b dir="ltr">{email}</b>. פתח אותו באותו מכשיר שבו אתה רוצה להיכנס.
