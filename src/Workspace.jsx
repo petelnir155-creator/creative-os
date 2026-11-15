@@ -164,7 +164,7 @@ export default function Workspace() {
               : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm'
           }`}
         >
-          סטודיו יצירתי
+          רובוט עדי
         </button>
         <button
           onClick={() => setActiveTab('brands')}
