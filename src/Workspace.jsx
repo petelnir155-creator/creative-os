@@ -20,7 +20,10 @@ export default function Workspace() {
   const [viewId, setViewId] = useState(null)
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('studio') // <-- נוסף מנגנון הטאבים
+  
+  // שליטה בטאבים ובתצוגת הספרייה
+  const [activeTab, setActiveTab] = useState('studio') 
+  const [brandMode, setBrandMode] = useState('list') // 'list' | 'summary' | 'edit'
 
   const dirty = useRef(false)
   const fieldsRef = useRef(fields)
@@ -52,7 +55,7 @@ export default function Workspace() {
       if (e) return setError(e.message)
       let list = data
       if (!list.length) {
-        const { data: created, error: e2 } = await supabase.from('brands').insert({ brand_name: 'המותג הראשון' }).select().single()
+        const { data: created, error: e2 } = await supabase.from('brands').insert({ brand_name: 'לקוח ראשון' }).select().single()
         if (e2) return setError(e2.message)
         list = [created]
       }
@@ -62,7 +65,7 @@ export default function Workspace() {
     return () => { alive = false }
   }, [openBrand])
 
-  /* ---- autosave (name, background, and the draft brief + references) ---- */
+  /* ---- autosave ---- */
   const save = useCallback(async () => {
     if (!dirty.current || !activeId) return
     dirty.current = false
@@ -97,7 +100,7 @@ export default function Workspace() {
   }
   const newBrand = async () => {
     await save()
-    const { data, error: e } = await supabase.from('brands').insert({ brand_name: 'מותג חדש' }).select().single()
+    const { data, error: e } = await supabase.from('brands').insert({ brand_name: 'לקוח חדש' }).select().single()
     if (e) return setError(e.message)
     setBrands((bs) => [data, ...bs])
     openBrand(data)
@@ -110,12 +113,12 @@ export default function Workspace() {
     const rest = brands.filter((b) => b.id !== activeId)
     if (rest.length) { setBrands(rest); openBrand(rest[0]) }
     else {
-      const { data } = await supabase.from('brands').insert({ brand_name: 'המותג הראשון' }).select().single()
+      const { data } = await supabase.from('brands').insert({ brand_name: 'לקוח ראשון' }).select().single()
       setBrands([data]); openBrand(data)
     }
   }
 
-  /* ---- the brain: call Claude through the Edge Function, keep the result in the cloud ---- */
+  /* ---- the brain: call Claude ---- */
   const run = async (action) => {
     if (busy) return
     const f = fieldsRef.current
@@ -147,7 +150,7 @@ export default function Workspace() {
   }
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[#F8FAFC]">
       <BrandBar
         brands={brands} activeId={activeId}
         onSwitch={switchBrand} onNew={newBrand} onDelete={deleteBrand}
@@ -167,7 +170,10 @@ export default function Workspace() {
           רובוט עדי
         </button>
         <button
-          onClick={() => setActiveTab('brands')}
+          onClick={() => {
+            setActiveTab('brands')
+            setBrandMode('list') // תמיד נכנס קודם לרשימה הכללית
+          }}
           className={`px-5 py-2 rounded-lg font-bold transition-all ${
             activeTab === 'brands'
               ? 'bg-purple-600 text-white shadow-md'
@@ -180,15 +186,29 @@ export default function Workspace() {
 
       <main className="mx-auto max-w-6xl p-4">
         {activeTab === 'studio' ? (
-          /* --- מסך 1: עבודה שוטפת על בריפים --- */
+          /* --- מסך 1: עבודה שוטפת (רובוט עדי) --- */
           <div className="grid gap-4 lg:grid-cols-[5fr_6fr] lg:items-start">
             <div className="flex min-w-0 flex-col gap-3.5">
               <section className={card}>
-                <h2 className="text-base font-extrabold"><label htmlFor="brief">הבריף הנוכחי ({fields.brand_name})</label></h2>
-                <p className="-mt-1 text-[13px] leading-snug text-slate-500">האתגר, הנושא המרכזי, המטרה והגבולות.</p>
-                <AutoTextarea id="brief" minRows={7} className="min-h-48" value={fields.brief}
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-base font-extrabold"><label htmlFor="brief">הבריף הנוכחי</label></h2>
+                  
+                  {/* בורר הלקוחות החדש שביקשת בתוך הסטודיו */}
+                  <select 
+                    value={activeId || ''} 
+                    onChange={(e) => switchBrand(e.target.value)}
+                    className="bg-slate-100 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 py-1 font-medium outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                  >
+                    {brands.map(b => (
+                      <option key={b.id} value={b.id}>{b.brand_name || 'לקוח ללא שם'}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <p className="-mt-1 text-[13px] leading-snug text-slate-500">האתגר, הנושא המרכזי, המטרה והגבולות עבור {fields.brand_name}.</p>
+                <AutoTextarea id="brief" minRows={7} className="min-h-48 mt-2" value={fields.brief}
                   onChange={(e) => edit({ brief: e.target.value })}
-                  placeholder="למשל: תסריט ל-30 שניות על ביקורות 5 כוכבים בגוגל. לא ללעוג ללקוחות ולא לערער על האמינות. הזווית: אנחנו לועגים למותג עצמו." />
+                  placeholder="למשל: תסריט ל-30 שניות על ביקורות 5 כוכבים בגוגל. לא ללעוג ללקוחות ולא לערער על האמינות." />
               </section>
 
               <section className={card}>
@@ -208,17 +228,90 @@ export default function Workspace() {
             </div>
           </div>
         ) : (
-          /* --- מסך 2: הזרקת DNA למותג --- */
-          <div className="mx-auto max-w-3xl flex min-w-0 flex-col gap-3.5">
-            <section className={`${card} p-6 sm:p-8`}>
-              <h2 className="text-xl font-extrabold text-slate-800 mb-1">
-                ה-DNA של {fields.brand_name || 'המותג'}
-              </h2>
-              <p className="mb-6 text-[14px] leading-relaxed text-slate-500">
-                מלא כאן את האופי והסגנון של הלקוח. כל מה שתכתוב פה יישמר בענן ויוזרק אוטומטית כ"מוח" לקלוד בכל פעם שתיצור עבורו בריף חדש בסטודיו.
-              </p>
-              <ClientManager fields={fields} onChange={edit} />
-            </section>
+          /* --- מסך 2: ספריית מותגים מורחבת --- */
+          <div className="mx-auto max-w-4xl flex min-w-0 flex-col gap-3.5 mt-2">
+            
+            {/* מצב 1: רשימת הלקוחות (תיקיות) */}
+            {brandMode === 'list' && (
+              <div className={`${card} p-8`}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-extrabold text-slate-800">תיקי לקוחות</h2>
+                  <button
+                    onClick={async () => {
+                      await newBrand();
+                      setBrandMode('edit');
+                    }}
+                    className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-bold hover:bg-purple-200 transition"
+                  >
+                    + לקוח חדש
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {brands.map((b) => (
+                    <div
+                      key={b.id}
+                      onClick={() => {
+                        switchBrand(b.id);
+                        setBrandMode('summary');
+                      }}
+                      className="border border-slate-200 rounded-xl p-6 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all bg-slate-50 hover:bg-white text-center group"
+                    >
+                      <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📁</div>
+                      <h3 className="text-lg font-bold text-slate-800">{b.brand_name || 'ללא שם'}</h3>
+                      <p className="text-sm text-slate-500 mt-1">צפה ב-DNA</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* מצב 2: תצוגת תקציר לקוח (קריאה בלבד) */}
+            {brandMode === 'summary' && (
+              <div className={`${card} p-8`}>
+                <div className="flex justify-between items-start mb-8 border-b border-slate-100 pb-4">
+                  <div>
+                    <button onClick={() => setBrandMode('list')} className="text-slate-400 hover:text-purple-600 text-sm font-medium mb-3 flex items-center gap-1 transition">
+                      ← חזור לרשימת הלקוחות
+                    </button>
+                    <h2 className="text-3xl font-extrabold text-slate-800">{fields.brand_name}</h2>
+                  </div>
+                  <button onClick={() => setBrandMode('edit')} className="border border-slate-200 text-slate-700 px-5 py-2 rounded-lg font-bold hover:bg-slate-50 transition shadow-sm">
+                    ✏️ ערוך DNA
+                  </button>
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">טון דיבור</h4>
+                    <p className="text-slate-700 bg-slate-50 p-4 rounded-xl whitespace-pre-wrap text-[15px] leading-relaxed border border-slate-100">{fields.tone_of_voice || 'עדיין לא הוגדר טון דיבור.'}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">דמויות ראשיות</h4>
+                    <p className="text-slate-700 bg-slate-50 p-4 rounded-xl whitespace-pre-wrap text-[15px] leading-relaxed border border-slate-100">{fields.main_characters || 'עדיין לא הוגדרו דמויות.'}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">תובנות ליבה</h4>
+                    <p className="text-slate-700 bg-slate-50 p-4 rounded-xl whitespace-pre-wrap text-[15px] leading-relaxed border border-slate-100">{fields.core_insights || 'עדיין לא הוגדרו תובנות.'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* מצב 3: עריכת DNA */}
+            {brandMode === 'edit' && (
+              <section className={`${card} p-6 sm:p-8 border-purple-200 shadow-md ring-1 ring-purple-50`}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-extrabold text-slate-800">
+                    עריכת {fields.brand_name || 'מותג'}
+                  </h2>
+                  <button onClick={() => setBrandMode('summary')} className="bg-purple-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-purple-700 transition shadow-sm">
+                    ✓ סיום עריכה
+                  </button>
+                </div>
+                <ClientManager fields={fields} onChange={edit} />
+              </section>
+            )}
+            
           </div>
         )}
       </main>
