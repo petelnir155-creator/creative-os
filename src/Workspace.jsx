@@ -20,6 +20,7 @@ export default function Workspace() {
   const [viewId, setViewId] = useState(null)
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('studio') // <-- נוסף מנגנון הטאבים
 
   const dirty = useRef(false)
   const fieldsRef = useRef(fields)
@@ -153,37 +154,73 @@ export default function Workspace() {
         onSignOut={() => supabase.auth.signOut()} saveState={saveState}
       />
 
-      <main className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[5fr_6fr] lg:items-start">
-        <div className="flex min-w-0 flex-col gap-3.5">
-          <section className={card}>
-            <h2 className="text-base font-extrabold">ספריית מותגים</h2>
-            <p className="-mt-1 text-[13px] leading-snug text-slate-500">נשמר בענן ומסונכרן בין המכשירים.</p>
-            <ClientManager fields={fields} onChange={edit} />
-          </section>
+      {/* תפריט הטאבים */}
+      <div className="mx-auto max-w-6xl px-4 pt-6 flex gap-3">
+        <button
+          onClick={() => setActiveTab('studio')}
+          className={`px-5 py-2 rounded-lg font-bold transition-all ${
+            activeTab === 'studio'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm'
+          }`}
+        >
+          סטודיו יצירתי
+        </button>
+        <button
+          onClick={() => setActiveTab('brands')}
+          className={`px-5 py-2 rounded-lg font-bold transition-all ${
+            activeTab === 'brands'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm'
+          }`}
+        >
+          ספריית מותגים
+        </button>
+      </div>
 
-          <section className={card}>
-            <h2 className="text-base font-extrabold"><label htmlFor="brief">הבריף הנוכחי</label></h2>
-            <p className="-mt-1 text-[13px] leading-snug text-slate-500">האתגר, הנושא המרכזי, המטרה והגבולות.</p>
-            <AutoTextarea id="brief" minRows={7} className="min-h-48" value={fields.brief}
-              onChange={(e) => edit({ brief: e.target.value })}
-              placeholder="למשל: תסריט ל-30 שניות על ביקורות 5 כוכבים בגוגל. לא ללעוג ללקוחות ולא לערער על האמינות. הזווית: אנחנו לועגים למותג עצמו." />
-          </section>
+      <main className="mx-auto max-w-6xl p-4">
+        {activeTab === 'studio' ? (
+          /* --- מסך 1: עבודה שוטפת על בריפים --- */
+          <div className="grid gap-4 lg:grid-cols-[5fr_6fr] lg:items-start">
+            <div className="flex min-w-0 flex-col gap-3.5">
+              <section className={card}>
+                <h2 className="text-base font-extrabold"><label htmlFor="brief">הבריף הנוכחי ({fields.brand_name})</label></h2>
+                <p className="-mt-1 text-[13px] leading-snug text-slate-500">האתגר, הנושא המרכזי, המטרה והגבולות.</p>
+                <AutoTextarea id="brief" minRows={7} className="min-h-48" value={fields.brief}
+                  onChange={(e) => edit({ brief: e.target.value })}
+                  placeholder="למשל: תסריט ל-30 שניות על ביקורות 5 כוכבים בגוגל. לא ללעוג ללקוחות ולא לערער על האמינות. הזווית: אנחנו לועגים למותג עצמו." />
+              </section>
 
-          <section className={card}>
-            <h2 className="text-base font-extrabold">רפרנסים</h2>
-            <p className="-mt-1 text-[13px] leading-snug text-slate-500">לכל רפרנס לינק ומטרה. הלינקים נשלחים כטקסט בלבד, וה־AI לא פותח אותם.</p>
-            <ReferencesList refs={fields.refs} onChange={(refs) => edit({ refs })} />
-          </section>
+              <section className={card}>
+                <h2 className="text-base font-extrabold">רפרנסים</h2>
+                <p className="-mt-1 text-[13px] leading-snug text-slate-500">לכל רפרנס לינק ומטרה. הלינקים נשלחים כטקסט בלבד.</p>
+                <ReferencesList refs={fields.refs} onChange={(refs) => edit({ refs })} />
+              </section>
 
-          <section className={card} aria-label="פעולות">
-            <h2 className="text-base font-extrabold">מה עושים עם זה?</h2>
-            <ActionPanel busy={busy} onRun={run} />
-          </section>
-        </div>
+              <section className={card} aria-label="פעולות">
+                <h2 className="text-base font-extrabold">מה עושים עם זה?</h2>
+                <ActionPanel busy={busy} onRun={run} />
+              </section>
+            </div>
 
-        <div ref={outRef} className="min-w-0 scroll-mt-20 lg:sticky lg:top-20">
-          <OutputPanel gens={gens} viewId={viewId} onView={setViewId} busy={busy} error={error} />
-        </div>
+            <div ref={outRef} className="min-w-0 scroll-mt-20 lg:sticky lg:top-20">
+              <OutputPanel gens={gens} viewId={viewId} onView={setViewId} busy={busy} error={error} />
+            </div>
+          </div>
+        ) : (
+          /* --- מסך 2: הזרקת DNA למותג --- */
+          <div className="mx-auto max-w-3xl flex min-w-0 flex-col gap-3.5">
+            <section className={`${card} p-6 sm:p-8`}>
+              <h2 className="text-xl font-extrabold text-slate-800 mb-1">
+                ה-DNA של {fields.brand_name || 'המותג'}
+              </h2>
+              <p className="mb-6 text-[14px] leading-relaxed text-slate-500">
+                מלא כאן את האופי והסגנון של הלקוח. כל מה שתכתוב פה יישמר בענן ויוזרק אוטומטית כ"מוח" לקלוד בכל פעם שתיצור עבורו בריף חדש בסטודיו.
+              </p>
+              <ClientManager fields={fields} onChange={edit} />
+            </section>
+          </div>
+        )}
       </main>
     </div>
   )
