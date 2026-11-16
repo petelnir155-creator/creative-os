@@ -24,10 +24,14 @@ export default function AuthGate() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4" dir="rtl">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg border border-slate-200">
-        <div className="text-center mb-6">
-          <img src="/adi.png" alt="רובוט עדי" className="w-16 h-16 rounded-2xl mx-auto mb-3 object-cover shadow-md" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4" dir="rtl">
+      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl border border-slate-200">
+        <div className="text-center mb-8">
+          <img 
+            src="/adi.png" 
+            alt="רובוט עדי" 
+            className="w-32 h-32 mx-auto mb-4 object-contain drop-shadow-md" 
+          />
           <h1 className="text-2xl font-bold text-slate-800">רובוט עדי</h1>
           <p className="text-sm text-slate-500 mt-1">התחבר למערכת הקריאייטיב</p>
         </div>
@@ -47,7 +51,7 @@ export default function AuthGate() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-slate-50"
               dir="ltr"
             />
           </div>
@@ -60,7 +64,7 @@ export default function AuthGate() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-left bg-slate-50"
               dir="ltr"
             />
           </div>
@@ -68,7 +72,7 @@ export default function AuthGate() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-md disabled:opacity-50 cursor-pointer mt-2"
           >
             {loading ? 'מתחבר...' : 'התחבר למערכת'}
           </button>
