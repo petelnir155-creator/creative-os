@@ -11,8 +11,7 @@ export default function BrandBar({ brands, activeId, onSwitch, onNew, onDelete, 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
-<img src="/adi.png" alt="רובוט עדי" className="h-8 w-8 rounded-lg object-cover" />        <h1 className="me-2 text-base font-extrabold">רובוט עדי</h1>
-
+<img src="/adi.png" alt="רובוט עדי" className="h-12 w-12 object-contain" />
         <label htmlFor="brandSelect" className="sr-only">בחר מותג</label>
         <select
           id="brandSelect" value={activeId ?? ''} onChange={(e) => onSwitch(e.target.value)}
