@@ -11,8 +11,7 @@ export default function BrandBar({ brands, activeId, onSwitch, onNew, onDelete, 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-white" aria-hidden="true">✦</span>
-        <h1 className="me-2 text-base font-extrabold">רובוט עדי</h1>
+<img src="/adi.png" alt="רובוט עדי" className="h-8 w-8 rounded-lg object-cover" />        <h1 className="me-2 text-base font-extrabold">רובוט עדי</h1>
 
         <label htmlFor="brandSelect" className="sr-only">בחר מותג</label>
         <select
