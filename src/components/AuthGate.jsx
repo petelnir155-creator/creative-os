@@ -3,45 +3,77 @@ import { supabase } from '../lib/supabase'
 
 export default function AuthGate() {
   const [email, setEmail] = useState('')
-  const [state, setState] = useState('idle') // idle | sending | sent | error
-  const [message, setMessage] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
-  const submit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    setState('sending')
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+    setLoading(true)
+    setErrorMsg('')
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     })
-    if (error) { setState('error'); setMessage(error.message) } else setState('sent')
+
+    if (error) {
+      setErrorMsg('שגיאה בהתחברות: ' + error.message)
+    }
+    setLoading(false)
   }
 
   return (
-    <div className="grid min-h-dvh place-items-center p-6">
-      <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-extrabold">רובוט עדי</h1>
-        {state === 'sent' ? (
-          <p className="text-sm leading-relaxed text-slate-600">
-            שלחתי קישור כניסה ל־<b dir="ltr">{email}</b>. פתח אותו באותו מכשיר שבו אתה רוצה להיכנס.
-          </p>
-        ) : (
-          <>
-            <label htmlFor="email" className="text-sm font-bold">אימייל</label>
-            <input
-              id="email" type="email" required dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)}
-              className="rounded-xl border border-slate-200 px-3.5 py-3 text-start text-base outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-              placeholder="you@example.com" autoComplete="email"
-            />
-            <button
-              type="submit" disabled={state === 'sending'}
-              className="rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-5 py-3 text-base font-bold text-white disabled:opacity-60"
-            >
-              {state === 'sending' ? 'שולח...' : 'שלח לי קישור כניסה'}
-            </button>
-            {state === 'error' && <p role="alert" className="text-sm text-red-700">{message}</p>}
-          </>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4" dir="rtl">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg border border-slate-200">
+        <div className="text-center mb-6">
+          <img src="/adi.png" alt="רובוט עדי" className="w-16 h-16 rounded-2xl mx-auto mb-3 object-cover shadow-md" />
+          <h1 className="text-2xl font-bold text-slate-800">רובוט עדי</h1>
+          <p className="text-sm text-slate-500 mt-1">התחבר למערכת הקריאייטיב</p>
+        </div>
+
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg text-right">
+            {errorMsg}
+          </div>
         )}
-      </form>
+
+        <form onSubmit={handleLogin} className="space-y-4 text-right">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">אימייל</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left"
+              dir="ltr"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">סיסמה</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-left"
+              dir="ltr"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? 'מתחבר...' : 'התחבר למערכת'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
